@@ -6,8 +6,8 @@ Analysis of the supplied `engine_data.csv`: 19,535 observations, six numeric sen
 
 ## Submission files
 
-- `reports/Harshit_Rathi_PredictiveMaintenance_InterimReport.pdf`
-- `reports/Harshit_Rathi_PredictiveMaintenance_Notebook.html`
+- `submission/Harshit_Rathi_PredictiveMaintenance_InterimReport.pdf`
+- `submission/Harshit_Rathi_PredictiveMaintenance_Notebook.html`
 
 The executed source notebook is `notebooks/Harshit_Rathi_PredictiveMaintenance.ipynb`. Its analytical code is embedded so the HTML contains the complete implementation and outputs. Dataset provenance has been verified. The healthy/faulty mapping still requires confirmation from the course data dictionary or dataset creator.
 
@@ -37,7 +37,7 @@ python src/pipeline.py prepare
 python src/pipeline.py train
 ```
 
-To change only PDF layout without refitting models, use `python src/deliverables.py --report-only`. This requires the executed notebook and existing analysis artifacts with matching configuration. The engine-specific EDA/report generator expects the supplied six-sensor schema; `pipeline.py` itself supports configurable binary-classification schemas.
+To refresh the report layout and notebook explanations without refitting models, use `python src/deliverables.py --report-only`. This preserves executed code and outputs and exports the revised HTML alongside the PDF into `reports/`; copy both files into `submission/` after review. This requires the executed notebook and existing local analysis artifacts with matching configuration. The engine-specific EDA/report generator expects the supplied six-sensor schema; `pipeline.py` itself supports configurable binary-classification schemas.
 
 ## Evidence and rubric coverage
 
@@ -53,6 +53,8 @@ To change only PDF layout without refitting models, use `python src/deliverables
 | Submission | Numbered PDF pages, figures/tables, methods, findings, recommendations and raw-code appendix; executed HTML notebook |
 | Reproducibility | `artifacts/model/run_metadata.json` records environment, configuration, seed and source/split hashes |
 
-The GitHub workflow is provided locally; this folder is not a Git repository and no hosted workflow run or remote commit has been performed. The workflow uploads the best model and logs as an artifact available for a later repository commit. Add the data, source, configuration and workflow to the intended repository before running it there.
+The repository is [harshitrathi14/capstone-predictivemaintenance](https://github.com/harshitrathi14/capstone-predictivemaintenance). The GitHub Actions workflow has three jobs: `prepare` validates the data and uploads saved splits; `train` downloads the splits, tunes the forest and uploads the model and logs; `persist-model` commits those results to `models/`. Relevant pushes to `main` trigger training; manual runs are also enabled. Model-only commits do not trigger another run.
+
+Hosted execution is recorded in `workflow_evidence.json`, including the run link and model commit. The PDF and HTML retain the original local results for consistency with their executed outputs. Hosted results and package versions are recorded separately in `models/metrics.json` and `models/run_metadata.json`; different package versions can produce small score differences. The hosted run does not regenerate the submission files.
 
 Tests use temporary synthetic fixtures only for software verification, covering schema/label rejection, artifact tampering, disjoint splits, model serialization and unseen categories. Submission results use the supplied engine dataset.

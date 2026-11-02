@@ -1,0 +1,40 @@
+{
+  "conclusion": "success",
+  "databaseId": 41421706788,
+  "headSha": "1b4db48b91a9cd4c9f80aa540917abd3b5768716",
+  "jobs": [
+    {
+      "name": "prepare",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788/job/125198535289"
+    },
+    {
+      "name": "train",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788/job/125198937290"
+    },
+    {
+      "name": "persist-model",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788/job/125199959302"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788",
+  "model_commit": "ba0ee8aa08485c24a80f1043cf99a012b0912773",
+  "artifacts": [
+    {
+      "name": "model-and-experiments",
+      "size_in_bytes": 1822509,
+      "expired": false
+    },
+    {
+      "name": "train-test-splits",
+      "size_in_bytes": 594674,
+      "expired": false
+    }
+  ]
+}

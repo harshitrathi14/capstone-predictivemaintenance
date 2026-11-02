@@ -7803,10 +7803,10 @@ a.anchor-link {
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="Predictive-Maintenance-%E2%80%94-Interim-Analysis">Predictive Maintenance — Interim Analysis<a class="anchor-link" href="#Predictive-Maintenance-%E2%80%94-Interim-Analysis">¶</a></h1><p>Harshit Rathi</p>
+<p>The question I explore here is whether the six sensor readings can distinguish the two recorded engine-condition classes. Before fitting a model, I check the data, set aside a test split and examine the training observations. This keeps the final evaluation separate from the choices made during analysis.</p>
 <p>Source: Parv Modi, Automotive Vehicles Engine Health Dataset, Kaggle, version 1 (2023). The user-supplied engine_data.csv was verified byte-for-byte against the public download on 2 November 2026. Collection protocol and pressure/temperature units remain unverified.</p>
 <p>The healthy/faulty mapping remains unverified because external sources conflict. This report retains class 0/class 1 terminology throughout. Class 1 is the positive class solely for statistical evaluation; it does not imply healthy, faulty, or better condition.</p>
-<p>Reproduction: run from the project root with data/engine_data.csv present; install requirements.txt. The analytical source is embedded below. All EDA uses training rows; the test set is reserved for final evaluation.</p>
-<h3 id="Source-verification-and-conflicting-label-definitions">Source verification and conflicting label definitions<a class="anchor-link" href="#Source-verification-and-conflicting-label-definitions">¶</a></h3><ul>
+<h3 id="A-note-on-the-target-labels">A note on the target labels<a class="anchor-link" href="#A-note-on-the-target-labels">¶</a></h3><ul>
 <li><p><a href="https://www.kaggle.com/datasets/parvmodi/automotive-vehicles-engine-health-dataset">Original dataset: Parv Modi, Automotive Vehicles Engine Health Dataset, Kaggle, version 1 (2023)</a>: The downloaded CSV exactly matches the supplied file. The retrieved source metadata does not define the target-class meanings.</p>
 </li>
 <li><p><a href="https://www.vzu.uni-wuppertal.de/fileadmin/site/vzu/Masterarbeit_HosseinNafar.pdf#page=41">Hossein Nafar, master thesis, University of Wuppertal (2024), printed page 30 / PDF page 41</a>: Describes class 1 as healthy and class 0 as out of operation or failed; reference 47 cites the matching Kaggle dataset.</p>
@@ -7814,7 +7814,8 @@ a.anchor-link {
 <li><p><a href="https://ajosr.org/wp-content/uploads/journal/published_paper/volume-2/issue-2/ajsr2024_pFcUxi32.pdf#page=3">Jayden P. Chen, Fusion of Neural Networks and Logistic Regression for Predictive Maintenance of Vehicle Engines (2024), Table 1, page 66</a>: Describes class 1 as indicating a need for maintenance. Its sensor summary statistics match this dataset, although its stated row count differs.</p>
 </li>
 </ul>
-<p>The disagreement is unresolved. Sensor averages cannot establish label semantics without verified ground truth. No labels have been reversed or renamed.</p>
+<p>These sources disagree about what class 1 means. I therefore keep the original 0 and 1 labels rather than choose a meaning from the sensor averages. A difference in average rpm can describe a pattern, but cannot tell us which group is healthy.</p>
+<p>To reproduce the analysis, install requirements.txt and run from the project root with data/engine_data.csv present. The analytical code and its executed outputs are included below.</p>
 </div>
 </div>
 </div>
@@ -7995,7 +7996,9 @@ a.anchor-link {
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="1.-Data-registration-and-preparation">1. Data registration and preparation<a class="anchor-link" href="#1.-Data-registration-and-preparation">¶</a></h2><p>Methodology: validate all seven columns, numeric features, binary labels, missing values and duplicates; hash the input. Retain all six sensors, remove exact duplicates if present and stratify an 80/20 split. Learn imputation inside cross-validation. No timestamp or equipment identifier is available for a time/group split.</p>
+<h2 id="1.-Data-registration-and-preparation">1. Data registration and preparation<a class="anchor-link" href="#1.-Data-registration-and-preparation">¶</a></h2><h3 id="Methodology">Methodology<a class="anchor-link" href="#Methodology">¶</a></h3><p>I check the seven expected columns, numeric sensor values, binary target, missing entries and duplicates. A SHA-256 checksum identifies the exact input file. The preparation function retains all six sensors and saves a stratified 80/20 split with seed 42.</p>
+<p>Stratification keeps the class proportions similar in the two splits. There are no timestamps or engine identifiers, so a chronological or engine-level split is not possible. This is a limitation: rows from the same engine could be related, even though the file does not let me check that.</p>
+<p>The supplied data have no missing entries or exact duplicate rows. I keep median imputation inside the model pipeline as a safeguard, so any imputation is learned from the training fold only.</p>
 </div>
 </div>
 </div>
@@ -8068,7 +8071,9 @@ No features dropped; no missing values or exact duplicates in the supplied file.
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="2.-Exploratory-analysis">2. Exploratory analysis<a class="anchor-link" href="#2.-Exploratory-analysis">¶</a></h2><p>Methodology: summarize training distributions, compare feature means and boxplots by class, calculate Pearson correlations, and flag 1.5-IQR extremes without deleting them. Sensor units, collection process and target meanings were not provided.</p>
+<h2 id="2.-Exploratory-analysis">2. Exploratory analysis<a class="anchor-link" href="#2.-Exploratory-analysis">¶</a></h2><h3 id="Methodology">Methodology<a class="anchor-link" href="#Methodology">¶</a></h3><p>I use only the training split for this section. The summary table and histograms show the ranges and tails; the class means and boxplots show how much the groups overlap. Pearson correlations provide a first look at linear relationships. I also count readings outside the 1.5-IQR limits, without automatically removing them.</p>
+<p>Three points help interpret the outputs below. Class 1 accounts for about 63% of observations, so accuracy alone would reward a model that always chooses the majority class. Mean rpm differs between classes, but the boxplots overlap, making a single rpm cutoff difficult to justify. Coolant temperature has only two IQR-flagged training readings, including a maximum of 195.53; those readings stretch the histogram scale and deserve a measurement check.</p>
+<p>I retain the extremes because units and physical operating limits are not documented. Removing them solely because they are unusual could discard useful condition information.</p>
 </div>
 </div>
 </div>
@@ -8517,7 +8522,9 @@ No identifier, timestamp, or failure-mode field is present. All six sensor featu
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="3.-Model-building-and-experimentation-tracking">3. Model building and experimentation tracking<a class="anchor-link" href="#3.-Model-building-and-experimentation-tracking">¶</a></h2><p>Methodology: evaluate 16 random forest candidates using three shuffled stratified folds, seed 42. Rank by class-1 average precision; refit the winner on the training split. The test set is not used for tuning. A prior-probability dummy model is the baseline. The default decision threshold is 0.5.</p>
+<h2 id="3.-Model-building-and-experiment-tracking">3. Model building and experiment tracking<a class="anchor-link" href="#3.-Model-building-and-experiment-tracking">¶</a></h2><h3 id="Methodology">Methodology<a class="anchor-link" href="#Methodology">¶</a></h3><p>I compare a random forest with a prior-probability dummy classifier. The forest can combine sensor readings and capture nonlinear patterns without requiring feature scaling. The dummy model shows what the class proportions alone can achieve.</p>
+<p>The search covers 16 combinations of tree count, depth, minimum leaf size and class weighting. Each candidate uses the same three shuffled stratified folds, with seed 42. I select the highest mean validation average precision for class 1, refit on the full training split, and evaluate once on the held-out test rows. The classification threshold remains 0.5.</p>
+<p>Average precision is useful here because it evaluates ranking across thresholds. It does not choose a maintenance decision rule, especially while the class meanings remain uncertain. The full experiment table below includes all candidates and fold scores; scroll horizontally to see the parameter and timing columns.</p>
 </div>
 </div>
 </div>
@@ -9186,7 +9193,10 @@ Environment and dataset lineage:
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="4.-Business-interpretation-and-limitations">4. Business interpretation and limitations<a class="anchor-link" href="#4.-Business-interpretation-and-limitations">¶</a></h2><p>This is condition classification, not demonstrated prediction of future breakdown. Confirm which label denotes the maintenance-relevant condition before interpreting errors as missed faults or false alarms. Use validation data and agreed intervention costs to choose a threshold; do not optimize on the test set. Validate on new equipment and later time periods before deployment. No financial savings are claimed.</p>
+<h2 id="4.-What-the-results-mean">4. What the results mean<a class="anchor-link" href="#4.-What-the-results-mean">¶</a></h2><p>The forest reaches 0.80 test average precision against 0.63 for the baseline. Balanced accuracy also rises from 0.50 to 0.65. The sensor readings therefore contain some information about the recorded classes beyond their relative frequency.</p>
+<p>However, class-1 F1 at threshold 0.5 is 0.69, below the baseline's 0.77. The baseline predicts every row as class 1, giving it perfect class-1 recall while finding no class-0 rows. The forest identifies some of both classes, but gives up class-1 recall. The preferred operating point depends on which errors matter and what an inspection costs.</p>
+<p>My first next step would be to confirm the label definitions and sensor units. After that, I would choose a threshold using validation data and agreed intervention costs, then test on later observations from different engines. The current file supports condition classification; it cannot establish how far ahead of a failure an alert would arrive.</p>
+<h3 id="Workflow-execution">Workflow execution<a class="anchor-link" href="#Workflow-execution">¶</a></h3><p>GitHub Actions run 41421706788 completed successfully. The prepare job validated the data and uploaded the splits; train downloaded those splits, tuned the model and uploaded the results; persist-model committed the fitted model and logs to models/ (commit ba0ee8a). Run: <a href="https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788">https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/41421706788</a>. The report and notebook retain the original local execution results; the hosted run has its own metrics and environment record in models/.</p>
 </div>
 </div>
 </div>

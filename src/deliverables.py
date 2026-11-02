@@ -86,6 +86,102 @@ print(Path('artifacts/model/run_metadata.json').read_text())
     return nb
 
 
+def workflow_summary():
+    evidence_path = ROOT / 'workflow_evidence.json'
+    if not evidence_path.exists():
+        return ('The workflow is configured in the repository. A successful hosted run '
+                'and its model commit have not yet been recorded in this report.')
+    evidence = json.loads(evidence_path.read_text())
+    if evidence['conclusion'] != 'success':
+        raise ValueError('Hosted workflow evidence must describe a successful run.')
+    return (f"GitHub Actions run {evidence['databaseId']} completed successfully. "
+            'The prepare job validated the data and uploaded the splits; train downloaded those splits, '
+            'tuned the model and uploaded the results; persist-model committed the fitted model and logs '
+            f"to models/ (commit {evidence['model_commit'][:7]}). Run: {evidence['url']}. "
+            'The report and notebook retain the original local execution results; the hosted run has its own '
+            'metrics and environment record in models/.')
+
+
+def refresh_notebook_explanations(nb, cfg):
+    """Revise narrative cells while preserving the executed code and its outputs."""
+    markdown = [cell for cell in nb.cells if cell.cell_type == 'markdown']
+    if len(markdown) != 5:
+        raise ValueError('Expected the five narrative sections in the analysis notebook.')
+    metrics = json.loads((ROOT / 'artifacts/model/metrics.json').read_text())
+    refs = '\n\n'.join(f"- [{item['title']}]({item['url']}): {item['finding']}"
+                         for item in cfg.get('label_evidence', []))
+    markdown[0].source = (
+        '# Predictive Maintenance — Interim Analysis\n\n' + cfg['learner_name']
+        + '\n\nThe question I explore here is whether the six sensor readings can distinguish the two '
+        'recorded engine-condition classes. Before fitting a model, I check the data, set aside a test split '
+        'and examine the training observations. This keeps the final evaluation separate from the choices made during analysis.'
+        + '\n\nSource: ' + cfg['source'] + '\n\n' + cfg['label_note']
+        + '\n\n### A note on the target labels\n\n' + refs
+        + '\n\nThese sources disagree about what class 1 means. I therefore keep the original 0 and 1 labels '
+        'rather than choose a meaning from the sensor averages. A difference in average rpm can describe a pattern, '
+        'but cannot tell us which group is healthy.'
+        + '\n\nTo reproduce the analysis, install requirements.txt and run from the project root with '
+        'data/engine_data.csv present. The analytical code and its executed outputs are included below.')
+    markdown[1].source = (
+        '## 1. Data registration and preparation\n\n### Methodology\n\n'
+        'I check the seven expected columns, numeric sensor values, binary target, missing entries and duplicates. '
+        'A SHA-256 checksum identifies the exact input file. The preparation function retains all six sensors '
+        'and saves a stratified 80/20 split with seed 42.\n\n'
+        'Stratification keeps the class proportions similar in the two splits. There are no timestamps or engine '
+        'identifiers, so a chronological or engine-level split is not possible. This is a limitation: rows from '
+        'the same engine could be related, even though the file does not let me check that.\n\n'
+        'The supplied data have no missing entries or exact duplicate rows. I keep median imputation inside '
+        'the model pipeline as a safeguard, so any imputation is learned from the training fold only.')
+    markdown[2].source = (
+        '## 2. Exploratory analysis\n\n### Methodology\n\n'
+        'I use only the training split for this section. The summary table and histograms show the ranges '
+        'and tails; the class means and boxplots show how much the groups overlap. Pearson correlations '
+        'provide a first look at linear relationships. I also count readings outside the 1.5-IQR limits, '
+        'without automatically removing them.\n\n'
+        'Three points help interpret the outputs below. Class 1 accounts for about 63% of observations, '
+        'so accuracy alone would reward a model that always chooses the majority class. Mean rpm differs '
+        'between classes, but the boxplots overlap, making a single rpm cutoff difficult to justify. '
+        'Coolant temperature has only two IQR-flagged training readings, including a maximum of 195.53; '
+        'those readings stretch the histogram scale and deserve a measurement check.\n\n'
+        'I retain the extremes because units and physical operating limits are not documented. '
+        'Removing them solely because they are unusual could discard useful condition information.')
+    markdown[3].source = (
+        '## 3. Model building and experiment tracking\n\n### Methodology\n\n'
+        'I compare a random forest with a prior-probability dummy classifier. The forest can combine sensor '
+        'readings and capture nonlinear patterns without requiring feature scaling. The dummy model shows '
+        'what the class proportions alone can achieve.\n\n'
+        'The search covers 16 combinations of tree count, depth, minimum leaf size and class weighting. '
+        'Each candidate uses the same three shuffled stratified folds, with seed 42. I select the highest '
+        'mean validation average precision for class 1, refit on the full training split, and evaluate once '
+        'on the held-out test rows. The classification threshold remains 0.5.\n\n'
+        'Average precision is useful here because it evaluates ranking across thresholds. It does not '
+        'choose a maintenance decision rule, especially while the class meanings remain uncertain. '
+        'The full experiment table below includes all candidates and fold scores; scroll horizontally '
+        'to see the parameter and timing columns.')
+    markdown[4].source = (
+        '## 4. What the results mean\n\n'
+        f"The forest reaches {metrics['random_forest']['average_precision']:.2f} test average precision "
+        f"against {metrics['baseline']['average_precision']:.2f} for the baseline. Balanced accuracy also "
+        f"rises from {metrics['baseline']['balanced_accuracy']:.2f} to "
+        f"{metrics['random_forest']['balanced_accuracy']:.2f}. The sensor readings therefore contain some "
+        'information about the recorded classes beyond their relative frequency.\n\n'
+        f"However, class-1 F1 at threshold 0.5 is {metrics['random_forest']['f1']:.2f}, below the "
+        f"baseline's {metrics['baseline']['f1']:.2f}. The baseline predicts every row as class 1, "
+        'giving it perfect class-1 recall while finding no '
+        'class-0 rows. The forest identifies some of both classes, but gives up class-1 recall. '
+        'The preferred operating point depends on which errors matter and what an inspection costs.\n\n'
+        'My first next step would be to confirm the label definitions and sensor units. After that, '
+        'I would choose a threshold using validation data and agreed intervention costs, then test '
+        'on later observations from different engines. The current file supports condition classification; '
+        'it cannot establish how far ahead of a failure an alert would arrive.\n\n'
+        '### Workflow execution\n\n' + workflow_summary())
+    notebook_path, html_path, _ = filenames(cfg)
+    nbformat.write(nb, notebook_path)
+    exporter = HTMLExporter()
+    html, _ = exporter.from_notebook_node(nb)
+    html_path.write_text(html)
+
+
 def render_report(cfg, nb):
     _, _, pdf_path = filenames(cfg)
     out = ROOT/'reports'
@@ -147,8 +243,8 @@ def render_report(cfg, nb):
     p('Engine condition classification | 2 November 2026', 'Title')
     heading('Executive overview')
     p(f"The supplied dataset contains {registration['rows']:,} observations and six sensor measurements. "
-      'The analysis tests whether these measurements distinguish the two Engine Condition classes. '
-      'A reproducible workflow validates the data, creates saved splits, tunes a random forest, and compares it with a majority-class baseline.')
+      'I use these measurements to examine whether the two recorded Engine Condition classes can be distinguished. '
+      'I first check the file and set aside a test split, then explore the training data and compare a tuned random forest with a majority-class baseline.')
     p(f"On {split['test_rows']:,} held-out observations, the random forest achieved "
       f"{metrics['random_forest']['balanced_accuracy']:.2f} balanced accuracy and "
       f"{metrics['random_forest']['average_precision']:.2f} average precision for class 1, versus "
@@ -157,15 +253,17 @@ def render_report(cfg, nb):
     p('The result is evidence of predictive association within this file. There is no time horizon, '
       'equipment identifier or prospective failure history, so advance warning of a breakdown and production readiness have not been established.')
     heading('Business objective')
-    p('Support a maintenance analyst in reviewing engine-condition observations using rpm, oil/fuel/coolant pressures and oil/coolant temperatures. '
-      'A successful operational system must reduce costly missed conditions while limiting unnecessary inspections. '
-      'The current interim evaluation measures classification quality; a cost-benefit claim requires label definitions and intervention costs.')
+    p('The practical aim is to help a maintenance analyst decide which engine observations need closer review. '
+      'A useful system would find concerning conditions without sending too many normal observations for inspection. '
+      'For this interim study, I can assess how well the recorded classes are separated. Estimating inspection workload '
+      'or savings will require confirmed label definitions and the costs of each kind of error.')
     page()
 
     heading('1. Data registration and background')
     p('Methodology', 'Heading2')
-    p('Load the CSV from the repository data folder; verify the exact seven-column schema, numeric sensor values, '
-      'binary target, missing values, duplicates and finite values; record SHA-256 for reproducibility.')
+    p('I load the CSV from the repository data folder and check the seven expected columns, numeric sensor values, '
+      'binary target, missing entries, duplicates and finite values. I also record the file checksum (SHA-256), '
+      'so a later run can be checked against the same input.')
     p('Source: '+cfg['source'])
     p('The healthy/faulty mapping remains unverified because external sources conflict. '
       'Nafar describes class 1 as healthy, while Chen describes class 1 as requiring maintenance. '
@@ -190,9 +288,10 @@ def render_report(cfg, nb):
 
     heading('2. Exploratory data analysis')
     p('Methodology', 'Heading2')
-    p('Conduct exploratory data analysis (EDA) only on the 15,628 training observations. Use distribution summaries and histograms for univariate analysis; '
-      'class-conditioned means and boxplots for bivariate analysis; a correlation matrix for multivariate analysis. '
-      'The 3,907 test observations are excluded from exploratory decisions.')
+    p('I restrict exploratory data analysis (EDA) to the 15,628 training observations. Summaries and histograms show '
+      'the distribution of each sensor; class means and boxplots show how the groups compare; a correlation matrix '
+      'examines linear relationships across variables. Keeping the 3,907 test rows aside avoids using the final '
+      'evaluation data to guide these choices.')
     table('Table 2. Training sensor summary', ['Sensor','Mean','Std. dev.','Median','Minimum','Maximum'],
           [[name]+[f'{row[k]:.2f}' for k in ['mean','std','50%','min','max']] for name,row in stats.iterrows()], [120,71,71,71,71,71])
     p('Values shown as 0.00 are rounded small positive pressures, not zero-valued or missing readings. Units other than rpm were not supplied.')
@@ -231,10 +330,11 @@ def render_report(cfg, nb):
 
     heading('3. Data preparation')
     p('Methodology', 'Heading2')
-    p('Retain the six numeric predictors, check for duplicate predictor rows with conflicting labels, '
-      'remove exact duplicates if present and stratify an 80/20 split using seed 42. '
-      'The observed dataset requires no row deletion or missing-value replacement. Median imputation remains in the fitted pipeline as a reproducible safeguard, '
-      'and is learned independently within every training fold.')
+    p('I retain all six sensors and check whether identical predictor rows carry conflicting labels. The preparation '
+      'function removes exact duplicates if any are found and saves a stratified 80/20 split using seed 42. '
+      'Stratification keeps similar class proportions in both splits. No rows need removal or missing-value '
+      'replacement in this file. Median imputation stays inside the fitted pipeline as a safeguard and is '
+      'learned separately within each training fold.')
     table('Table 5. Preparation decisions and rationale', ['Step','Decision and reason'], [
         ['Column removal','None. There are no IDs or explicit post-outcome columns in the supplied schema. Prediction-time sensor availability still needs confirmation.'],
         ['Duplicate / missing handling','No missing values or exact duplicates observed. No rows removed. Conflicting identical predictor rows are rejected.'],
@@ -245,17 +345,19 @@ def render_report(cfg, nb):
         ['Leakage prevention','No target used as a predictor; imputation fit within folds; hyperparameter selection excludes test data.']], [135,340])
     p('Saved artifacts: artifacts/splits/train.csv, test.csv, registration.json and split_metadata.json. '
       'The metadata includes source/split hashes and the class mapping. The training job validates the hashes before loading the split artifacts.')
-    p('Workflow design: the GitHub Actions prepare job uploads train-test-splits; the dependent train job downloads those files, '
-      'fits the models and uploads model-and-experiments. The local artifact handoff was executed; a hosted GitHub run has not been performed because this directory is not linked to a repository.')
+    p(workflow_summary())
     p('Split limitation: a random split assumes sufficiently independent rows. The CSV does not allow equipment-group or chronological validation. '
       'If repeated-engine data or timestamps become available, reevaluate with group/time separation before operational use.')
     page()
 
     heading('4. Model building and experiment tracking')
     p('Methodology', 'Heading2')
-    p('Compare a prior-probability dummy baseline with a random forest. '
-      'Tune 16 combinations using three shuffled, stratified cross-validation (CV) folds (48 fits), selecting the highest mean validation average precision (AP) for class 1. '
-      'Refit the selected pipeline on the complete training split, then evaluate on the held-out test set at the default threshold of 0.5.')
+    p('I use a random forest because it can combine nonlinear sensor patterns without feature scaling. '
+      'A prior-probability dummy classifier provides a reference based on class proportions alone. '
+      'I compare 16 parameter combinations across three shuffled, stratified cross-validation (CV) folds '
+      '(48 fits), selecting the highest mean validation average precision (AP) for class 1. '
+      'The selected pipeline is refitted on the complete training split and evaluated on the held-out rows '
+      'at the default threshold of 0.5.')
     table('Table 6. Hyperparameter search space', ['Parameter','Values'], [
         ['n_estimators','100, 200'],['max_depth','Unrestricted, 10'],['min_samples_leaf','1, 3'],
         ['class_weight','None, balanced'],['Fixed settings','random_state = 42; model n_jobs = 1; grid n_jobs = 4']], [180,295])
@@ -270,7 +372,9 @@ def render_report(cfg, nb):
       f"minimum {params['model__min_samples_leaf']} observation(s) per leaf, and {params['model__class_weight']} class weighting. "
       'Best mean cross-validation average precision: '
       f"{metrics['best_cv_average_precision']:.2f} (fold standard deviation {best['std_test_score']:.2f}). "
-      f"The corresponding mean training average precision is {best['mean_train_score']:.2f}; the training/validation gap is a check for overfitting.")
+      f"The corresponding mean training average precision is {best['mean_train_score']:.2f}. "
+      'The higher training score suggests some overfitting remains, even after limiting tree depth. '
+      'The leading candidates are close; the scores do not establish that the winner would always be best on another sample.')
     ordered = log.sort_values(['rank_test_score','mean_fit_time']).head(5)
     table('Table 7. Top five candidates by mean validation average precision', ['Trees','Depth','Leaf min.','Weights','CV AP','Train AP'],
           [[int(r['param_model__n_estimators']), 'None' if pd.isna(r['param_model__max_depth']) else int(r['param_model__max_depth']),
@@ -278,7 +382,7 @@ def render_report(cfg, nb):
             f"{r['mean_test_score']:.2f}",f"{r['mean_train_score']:.2f}"] for _,r in ordered.iterrows()], [60,65,65,95,95,95])
     p('All candidate parameters, fold scores, training scores, ranks and timing are logged in experiments.csv and displayed in the HTML notebook. '
       'The saved best_model.joblib contains preprocessing and the fitted forest. best_parameters.json and run_metadata.json record full settings, environment versions and input lineage. '
-      'The model is available for a later repository commit; no remote commit was made.')
+      'The original local fitted model is retained in artifacts/model/. The separately trained GitHub model and its run records are saved in models/.')
     page()
 
     heading('4.1 Held-out evaluation')
@@ -336,7 +440,7 @@ def render_report(cfg, nb):
       'Tests cover invalid schema/labels, disjoint splits, model serialization and unseen-category handling.')
     page()
     heading('Appendix B. Extended experiment log')
-    p('Table B1 below shows every candidate at full analytical precision for audit (main-body values use two decimal places). '
+    p('Table B1 below shows every candidate to five decimal places so the small score differences remain visible (main-body values use two decimal places). '
       'Full fold scores, parameters and timing appear in the HTML notebook and artifacts/model/experiments.csv.')
     table('Table B1. All 16 candidate results', ['Trees','Depth','Leaf','Weight','CV AP','CV std.','Rank'],
           [[int(r['param_model__n_estimators']), 'None' if pd.isna(r['param_model__max_depth']) else int(r['param_model__max_depth']),
@@ -368,10 +472,10 @@ def render_report(cfg, nb):
     heading('Appendix D. Workflow artifact handoff configuration')
     p('The following GitHub Actions workflow uploads the saved training/test split artifact from the preparation job '
       'and downloads it in the dependent training job. The fitted model and experiment logs are then uploaded as a second artifact. '
-      'This is configuration evidence, not evidence of a completed hosted run. Local CSV preparation and loading were executed; '
-      'a GitHub run and remote model commit remain outstanding.')
-    p('Source: .github/workflows/pipeline.yml. The saved model can be downloaded and committed to the intended repository; '
-      'this workflow does not automatically push a commit.')
+      'The final persist-model job downloads those results into models/ and commits them to the main branch.')
+    p(workflow_summary())
+    p('Source: .github/workflows/pipeline.yml. The workflow runs on relevant pushes to main and can also be started manually. '
+      'The automated model commit changes only models/, which is outside the push path filters, so it does not start another training run.')
     workflow = (ROOT/'.github/workflows/pipeline.yml').read_text()
     wrapped = '\n'.join('\n'.join(textwrap.wrap(line, width=105, replace_whitespace=False,
                       drop_whitespace=False) or ['']) for line in workflow.splitlines())
@@ -404,6 +508,7 @@ def main():
             raise ValueError('Notebook must be executed before report rendering.')
     else:
         nb = execute_notebook(cfg)
+    refresh_notebook_explanations(nb, cfg)
     render_report(cfg,nb)
     print('Notebook and HTML:',*filenames(cfg)[:2],sep='\n',flush=True)
 
