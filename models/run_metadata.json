@@ -1,0 +1,71 @@
+{
+  "configuration": {
+    "dataset": "data/engine_data.csv",
+    "source": "Parv Modi, Automotive Vehicles Engine Health Dataset, Kaggle, version 1 (2023). The user-supplied engine_data.csv was verified byte-for-byte against the public download on 2 November 2026. Collection protocol and pressure/temperature units remain unverified.",
+    "learner_name": "Harshit Rathi",
+    "target": "Engine Condition",
+    "positive_label": 1,
+    "expected_columns": [
+      "Engine rpm",
+      "Lub oil pressure",
+      "Fuel pressure",
+      "Coolant pressure",
+      "lub oil temp",
+      "Coolant temp",
+      "Engine Condition"
+    ],
+    "numeric_columns": [
+      "Engine rpm",
+      "Lub oil pressure",
+      "Fuel pressure",
+      "Coolant pressure",
+      "lub oil temp",
+      "Coolant temp"
+    ],
+    "drop_columns": [],
+    "label_note": "The healthy/faulty mapping remains unverified because external sources conflict. This report retains class 0/class 1 terminology throughout. Class 1 is the positive class solely for statistical evaluation; it does not imply healthy, faulty, or better condition.",
+    "source_url": "https://www.kaggle.com/datasets/parvmodi/automotive-vehicles-engine-health-dataset",
+    "label_evidence": [
+      {
+        "title": "Original dataset: Parv Modi, Automotive Vehicles Engine Health Dataset, Kaggle, version 1 (2023)",
+        "url": "https://www.kaggle.com/datasets/parvmodi/automotive-vehicles-engine-health-dataset",
+        "finding": "The downloaded CSV exactly matches the supplied file. The retrieved source metadata does not define the target-class meanings."
+      },
+      {
+        "title": "Hossein Nafar, master thesis, University of Wuppertal (2024), printed page 30 / PDF page 41",
+        "url": "https://www.vzu.uni-wuppertal.de/fileadmin/site/vzu/Masterarbeit_HosseinNafar.pdf#page=41",
+        "finding": "Describes class 1 as healthy and class 0 as out of operation or failed; reference 47 cites the matching Kaggle dataset."
+      },
+      {
+        "title": "Jayden P. Chen, Fusion of Neural Networks and Logistic Regression for Predictive Maintenance of Vehicle Engines (2024), Table 1, page 66",
+        "url": "https://ajosr.org/wp-content/uploads/journal/published_paper/volume-2/issue-2/ajsr2024_pFcUxi32.pdf#page=3",
+        "finding": "Describes class 1 as indicating a need for maintenance. Its sensor summary statistics match this dataset, although its stated row count differs."
+      }
+    ]
+  },
+  "splits": {
+    "train_rows": 15628,
+    "test_rows": 3907,
+    "removed_rows": 0,
+    "seed": 42,
+    "target": "Engine Condition",
+    "positive_label": 1,
+    "drop_columns": [],
+    "source_sha256": "616c7b985ec00e299061f02b11fd866f8eca16b5e8d15d4a61a5fbfd116b8045",
+    "split_sha256": {
+      "train": "cb2ed6e952ec52c2b14d60165ba8bf9e77537e7f4c29215fe51a8712df659f78",
+      "test": "25c2dc140bd54e619db312d40906ca20cfa711027814e435bdfc74a95cd5472f"
+    }
+  },
+  "python": "3.12.15",
+  "packages": {
+    "pandas": "2.3.3",
+    "numpy": "2.5.4",
+    "scikit-learn": "1.9.1",
+    "joblib": "1.6.0"
+  },
+  "selection_metric": "average_precision",
+  "folds": 3,
+  "seed": 42,
+  "candidate_count": 16
+}

@@ -1,0 +1,98 @@
+{
+  "memory": null,
+  "steps": [
+    [
+      "preprocessing",
+      "ColumnTransformer(transformers=[('numeric', SimpleImputer(strategy='median'),\n                                 ['Engine rpm', 'Lub oil pressure',\n                                  'Fuel pressure', 'Coolant pressure',\n                                  'lub oil temp', 'Coolant temp']),\n                                ('categorical',\n                                 Pipeline(steps=[('impute',\n                                                  SimpleImputer(strategy='most_frequent')),\n                                                 ('encode',\n                                                  OneHotEncoder(handle_unknown='ignore'))]),\n                                 [])])"
+    ],
+    [
+      "model",
+      "RandomForestClassifier(class_weight='balanced', max_depth=10, n_jobs=1,\n                       random_state=42)"
+    ]
+  ],
+  "transform_input": null,
+  "verbose": false,
+  "preprocessing": "ColumnTransformer(transformers=[('numeric', SimpleImputer(strategy='median'),\n                                 ['Engine rpm', 'Lub oil pressure',\n                                  'Fuel pressure', 'Coolant pressure',\n                                  'lub oil temp', 'Coolant temp']),\n                                ('categorical',\n                                 Pipeline(steps=[('impute',\n                                                  SimpleImputer(strategy='most_frequent')),\n                                                 ('encode',\n                                                  OneHotEncoder(handle_unknown='ignore'))]),\n                                 [])])",
+  "model": "RandomForestClassifier(class_weight='balanced', max_depth=10, n_jobs=1,\n                       random_state=42)",
+  "preprocessing__n_jobs": null,
+  "preprocessing__remainder": "drop",
+  "preprocessing__sparse_threshold": 0.3,
+  "preprocessing__transformer_weights": null,
+  "preprocessing__transformers": [
+    [
+      "numeric",
+      "SimpleImputer(strategy='median')",
+      [
+        "Engine rpm",
+        "Lub oil pressure",
+        "Fuel pressure",
+        "Coolant pressure",
+        "lub oil temp",
+        "Coolant temp"
+      ]
+    ],
+    [
+      "categorical",
+      "Pipeline(steps=[('impute', SimpleImputer(strategy='most_frequent')),\n                ('encode', OneHotEncoder(handle_unknown='ignore'))])",
+      []
+    ]
+  ],
+  "preprocessing__verbose": false,
+  "preprocessing__verbose_feature_names_out": true,
+  "preprocessing__numeric": "SimpleImputer(strategy='median')",
+  "preprocessing__categorical": "Pipeline(steps=[('impute', SimpleImputer(strategy='most_frequent')),\n                ('encode', OneHotEncoder(handle_unknown='ignore'))])",
+  "preprocessing__numeric__add_indicator": false,
+  "preprocessing__numeric__copy": true,
+  "preprocessing__numeric__fill_value": null,
+  "preprocessing__numeric__keep_empty_features": false,
+  "preprocessing__numeric__missing_values": NaN,
+  "preprocessing__numeric__strategy": "median",
+  "preprocessing__categorical__memory": null,
+  "preprocessing__categorical__steps": [
+    [
+      "impute",
+      "SimpleImputer(strategy='most_frequent')"
+    ],
+    [
+      "encode",
+      "OneHotEncoder(handle_unknown='ignore')"
+    ]
+  ],
+  "preprocessing__categorical__transform_input": null,
+  "preprocessing__categorical__verbose": false,
+  "preprocessing__categorical__impute": "SimpleImputer(strategy='most_frequent')",
+  "preprocessing__categorical__encode": "OneHotEncoder(handle_unknown='ignore')",
+  "preprocessing__categorical__impute__add_indicator": false,
+  "preprocessing__categorical__impute__copy": true,
+  "preprocessing__categorical__impute__fill_value": null,
+  "preprocessing__categorical__impute__keep_empty_features": false,
+  "preprocessing__categorical__impute__missing_values": NaN,
+  "preprocessing__categorical__impute__strategy": "most_frequent",
+  "preprocessing__categorical__encode__categories": "auto",
+  "preprocessing__categorical__encode__drop": null,
+  "preprocessing__categorical__encode__dtype": "<class 'numpy.float64'>",
+  "preprocessing__categorical__encode__feature_name_combiner": "concat",
+  "preprocessing__categorical__encode__handle_unknown": "ignore",
+  "preprocessing__categorical__encode__max_categories": null,
+  "preprocessing__categorical__encode__min_frequency": null,
+  "preprocessing__categorical__encode__sparse_output": true,
+  "model__bootstrap": true,
+  "model__ccp_alpha": 0.0,
+  "model__class_weight": "balanced",
+  "model__criterion": "gini",
+  "model__max_depth": 10,
+  "model__max_features": "sqrt",
+  "model__max_leaf_nodes": null,
+  "model__max_samples": null,
+  "model__min_impurity_decrease": 0.0,
+  "model__min_samples_leaf": 1,
+  "model__min_samples_split": 2,
+  "model__min_weight_fraction_leaf": 0.0,
+  "model__monotonic_cst": null,
+  "model__n_estimators": 100,
+  "model__n_jobs": 1,
+  "model__oob_score": false,
+  "model__random_state": 42,
+  "model__verbose": 0,
+  "model__warm_start": false
+}
