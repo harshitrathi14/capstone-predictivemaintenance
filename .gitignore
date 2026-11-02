@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+artifacts/
+reports/
+
+# Local course materials and duplicate raw upload are not repository content.
+/guidelines.txt
+/Capstone Project*.pdf
+/engine_data.csv
+.env
+.env.*
+!.env.example

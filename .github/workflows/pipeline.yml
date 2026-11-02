@@ -1,0 +1,96 @@
+name: Predictive maintenance
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'data/**'
+      - 'src/pipeline.py'
+      - 'tests/**'
+      - 'config.json'
+      - 'requirements.txt'
+      - '.github/workflows/pipeline.yml'
+permissions:
+  contents: read
+concurrency:
+  group: predictive-maintenance-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Verify pipeline behavior
+        run: python -m unittest discover -s tests -v
+      - name: Validate data and save train/test splits
+        run: python src/pipeline.py prepare
+      - uses: actions/upload-artifact@v4
+        with:
+          name: train-test-splits
+          path: artifacts/splits/
+          if-no-files-found: error
+          retention-days: 90
+  train:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v4
+        with:
+          name: train-test-splits
+          path: artifacts/splits/
+      - name: Tune and evaluate using downloaded split artifacts
+        run: python src/pipeline.py train
+      - name: Record workflow provenance
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          info = {key: os.environ[key] for key in ['GITHUB_REPOSITORY', 'GITHUB_SHA', 'GITHUB_RUN_ID', 'GITHUB_RUN_ATTEMPT']}
+          info['run_url'] = f"https://github.com/{info['GITHUB_REPOSITORY']}/actions/runs/{info['GITHUB_RUN_ID']}"
+          Path('artifacts/model/workflow_run.json').write_text(json.dumps(info, indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: model-and-experiments
+          path: artifacts/model/
+          if-no-files-found: error
+          retention-days: 90
+  persist-model:
+    needs: train
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/download-artifact@v4
+        with:
+          name: model-and-experiments
+          path: models/
+      - name: Commit trained model and experiment evidence
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add models/
+          if ! git diff --cached --quiet; then
+            git commit -m "Save trained model and experiments from run ${GITHUB_RUN_ID}"
+            git push origin HEAD:main
+          fi

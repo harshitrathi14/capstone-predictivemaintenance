@@ -1,0 +1,10 @@
+{
+  "dataset": "data/assigned_dataset.csv",
+  "source": "REPLACE with original dataset citation or URL",
+  "learner_name": "LearnerName",
+  "target": "REPLACE with binary target column",
+  "positive_label": 1,
+  "expected_columns": [],
+  "numeric_columns": [],
+  "drop_columns": []
+}
