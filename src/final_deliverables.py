@@ -38,7 +38,8 @@ def evidence():
         raise ValueError('Workflow evidence does not describe the committed model.')
     if ev['deployment']['model_sha256'] != hashlib.sha256((ROOT/'models/best_model.joblib').read_bytes()).hexdigest():
         raise ValueError('Deployed model evidence is stale.')
-    for name in ['github_repository.png', 'github_workflow.png', 'streamlit_cloud.png']:
+    for name in ['github_repository.png', 'github_workflow.png', 'streamlit_cloud.png',
+                 'github_repository_report.png', 'github_workflow_report.png']:
         if not (ROOT/'evidence'/name).exists():
             raise FileNotFoundError(name)
     return ev
@@ -379,7 +380,7 @@ def render_report(ev):
 
     h('4.1 Held-out model performance')
     table('Table 7. Performance on 3,907 held-out observations',['Metric','Prior baseline','Committed forest'],
-          [[k.replace('_',' ').title(),f'{baseline[k]:.2f}',f'{rf[k]:.2f}'] for k in
+          [[('ROC AUC' if k == 'roc_auc' else k.replace('_',' ').title()),f'{baseline[k]:.2f}',f'{rf[k]:.2f}'] for k in
            ['average_precision','roc_auc','balanced_accuracy','precision','recall','f1']],[235,120,120])
     fig(OUT/'figure_6.png','Figure 5. ROC and precision-recall curves for the committed model; positive class = 1.',215)
     p(f"Average precision improves by {rf['average_precision']-baseline['average_precision']:.2f} over the baseline. "
@@ -450,7 +451,7 @@ def render_report(ev):
     method('Inspect the published repository and capture its folder structure. Verify that the data, model, '
            'workflow, dependency file and app entry point are accessible from the submitted repository link.')
     link('GitHub repository: harshitrathi14/capstone-predictivemaintenance',REPO)
-    fig(ROOT/'evidence/github_repository.png','Figure 8. Actual GitHub repository folder structure captured for the final report.',345)
+    fig(ROOT/'evidence/github_repository_report.png','Figure 8. Actual GitHub repository, cropped to show its folder structure. The full capture is in the HTML notebook.',345)
     table('Table 11. Repository evidence map',['Location','Purpose'],[
         ['data/','Registered engine dataset'],['src/','Validation, preparation, training and inference code'],
         ['models/','Committed model, input profile, metrics, tuning log and workflow provenance'],
@@ -460,7 +461,7 @@ def render_report(ev):
 
     h('7.1 Output evaluation: executed workflow')
     link(f"Successful workflow run {ev['workflow']['id']}",ev['workflow']['url'])
-    fig(ROOT/'evidence/github_workflow.png','Figure 9. Actual executed GitHub Actions workflow with successful jobs.',330)
+    fig(ROOT/'evidence/github_workflow_report.png','Figure 9. Actual GitHub Actions run summary and successful jobs. The full capture is in the HTML notebook.',330)
     table('Table 12. Hosted workflow verification',['Check','Recorded result'],[
         ['Overall result',ev['workflow']['conclusion']],
         *[[j['name'],j['conclusion']] for j in ev['workflow']['jobs']],
@@ -482,7 +483,7 @@ def render_report(ev):
       'an out-of-range warning. The fresh hosted model also passed the app checks before it was committed.')
     p('This evidence establishes functional deployment and reproducible inference. It does not establish '
       'production reliability, prospective failure detection or a measured reduction in maintenance cost.')
-    p('Evidence captured: '+ev['captured_at']+'.','Caption')
+    p('Evidence captured: '+datetime.fromisoformat(ev['captured_at']).strftime('%d %B %Y, %I:%M %p IST')+'.','Caption')
     page()
 
     h('8. Actionable insights and recommendations')

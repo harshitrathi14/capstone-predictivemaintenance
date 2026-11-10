@@ -1,0 +1,104 @@
+test_app_submits_and_warns_on_outside_range (test_app.AppTests.test_app_submits_and_warns_on_outside_range) ... 2026-11-10 10:55:56.107 WARNING streamlit.runtime.scriptrunner_utils.script_run_context: Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.
+ok
+test_incomplete_and_nonfinite_readings_rejected (test_app.AppTests.test_incomplete_and_nonfinite_readings_rejected) ... ok
+test_saved_model_prediction_matches_form_dataframe (test_app.AppTests.test_saved_model_prediction_matches_form_dataframe) ... ok
+test_modified_split_rejected (test_pipeline.PipelineTests.test_modified_split_rejected) ... ok
+test_schema_rejected (test_pipeline.PipelineTests.test_schema_rejected) ... ok
+test_split_is_disjoint_and_training_roundtrips (test_pipeline.PipelineTests.test_split_is_disjoint_and_training_roundtrips) ... {
+  "rows": 90,
+  "columns": [
+    "id",
+    "sensor",
+    "type",
+    "failure"
+  ],
+  "missing": {
+    "id": 0,
+    "sensor": 0,
+    "type": 0,
+    "failure": 0
+  },
+  "duplicate_rows": 0,
+  "class_counts": {
+    "0": 60,
+    "1": 30
+  },
+  "source": "Synthetic test fixture only",
+  "sha256": "1e2f3c0e07ef4cdb32e1a204b49c7c34efaa4959ceeac5577d9779566357887f"
+}
+{
+  "rows": 90,
+  "columns": [
+    "id",
+    "sensor",
+    "type",
+    "failure"
+  ],
+  "missing": {
+    "id": 0,
+    "sensor": 0,
+    "type": 0,
+    "failure": 0
+  },
+  "duplicate_rows": 0,
+  "class_counts": {
+    "0": 60,
+    "1": 30
+  },
+  "source": "Synthetic test fixture only",
+  "sha256": "1e2f3c0e07ef4cdb32e1a204b49c7c34efaa4959ceeac5577d9779566357887f"
+}
+ok
+test_unknown_positive_rejected (test_pipeline.PipelineTests.test_unknown_positive_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 2.288s
+
+OK
+{
+  "baseline": {
+    "average_precision": 0.3333333333333333,
+    "roc_auc": 0.5,
+    "balanced_accuracy": 0.5,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "confusion_matrix": [
+      [
+        12,
+        0
+      ],
+      [
+        6,
+        0
+      ]
+    ]
+  },
+  "random_forest": {
+    "average_precision": 1.0,
+    "roc_auc": 1.0,
+    "balanced_accuracy": 1.0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0,
+    "confusion_matrix": [
+      [
+        12,
+        0
+      ],
+      [
+        0,
+        6
+      ]
+    ]
+  },
+  "best_cv_average_precision": 1.0,
+  "best_parameters": {
+    "model__class_weight": null,
+    "model__max_depth": null,
+    "model__min_samples_leaf": 1,
+    "model__n_estimators": 100
+  },
+  "test_prevalence": 0.3333333333333333,
+  "decision_threshold": 0.5
+}

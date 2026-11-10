@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-11-10T11:12:51.053759+05:30",
+  "pdf_pages": 20,
+  "executed_code_cells": 10,
+  "notebook_error_outputs": 0,
+  "embedded_html_images": 9,
+  "checks": [
+    "Correct filenames and exactly two final files",
+    "All eight rubric sections",
+    "All PDF pages numbered",
+    "Main report excludes raw code",
+    "Live app and successful workflow hyperlinks",
+    "Notebook executed end-to-end with output in every code cell",
+    "All HTML images embedded"
+  ],
+  "files": {
+    "Harshit_Rathi_PredictiveMaintenance_Notebook.html": {
+      "bytes": 1430428,
+      "sha256": "3c267fe297d70475fed25f410f0c37904fb51155e11ff3a877ca431d33c1d388"
+    },
+    "Harshit_Rathi_PredictiveMaintenance_FinalReport.pdf": {
+      "bytes": 1024883,
+      "sha256": "24da5ed5a6310bc59a4854d968f8bf7e19bcda54b256eb638b0816cb56777219"
+    }
+  }
+}

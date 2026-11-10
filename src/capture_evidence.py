@@ -1,7 +1,6 @@
 """Capture actual public pages for the final submission; requires Playwright locally."""
 import argparse
 import json
-import subprocess
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -25,11 +24,17 @@ def capture(app_url, workflow_record):
         browser = p.chromium.launch(channel='chrome', headless=True)
         page = browser.new_page(viewport={'width':1280,'height':1080},device_scale_factor=1)
         page.goto(REPO,wait_until='domcontentloaded',timeout=60000)
-        page.get_by_role('link',name='streamlit_app.py',exact=True).first.wait_for(timeout=30000)
+        page.locator('a[href$="/streamlit_app.py"]:visible').first.wait_for(timeout=30000)
+        page.wait_for_timeout(1500)
         page.screenshot(path=str(out/'github_repository.png'),full_page=False)
+        page.screenshot(path=str(out/'github_repository_report.png'),
+                        clip={'x':24,'y':180,'width':925,'height':520})
         page.goto(workflow_record['url'],wait_until='domcontentloaded',timeout=60000)
         page.get_by_text('persist-model',exact=True).first.wait_for(timeout=30000)
+        page.wait_for_timeout(1500)
         page.screenshot(path=str(out/'github_workflow.png'),full_page=False)
+        page.screenshot(path=str(out/'github_workflow_report.png'),
+                        clip={'x':24,'y':180,'width':1232,'height':440})
         page.set_viewport_size({'width':1440,'height':1180})
         page.goto(app_url,wait_until='domcontentloaded',timeout=60000)
         # Community Cloud may expose the app in an iframe.

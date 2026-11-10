@@ -1,0 +1,26 @@
+{
+  "id": 42762171518,
+  "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/42762171518",
+  "conclusion": "success",
+  "head_sha": "0a024f274d62f88852e09d30efa172c1b97d42fa",
+  "created_at": "2026-11-10T05:26:44Z",
+  "updated_at": "2026-11-10T05:30:22Z",
+  "jobs": [
+    {
+      "name": "prepare",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/42762171518/job/129650191824"
+    },
+    {
+      "name": "train",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/42762171518/job/129650597799"
+    },
+    {
+      "name": "persist-model",
+      "conclusion": "success",
+      "url": "https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/42762171518/job/129651329421"
+    }
+  ],
+  "model_commit": "5cef7f634a470a814a2bf83dffaa92bcbcc8d796"
+}

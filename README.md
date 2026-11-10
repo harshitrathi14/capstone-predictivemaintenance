@@ -4,12 +4,16 @@ Harshit Rathi · AIML Capstone Project 3
 
 Engine-condition classification using six sensor readings, a tuned random forest, a Streamlit Community Cloud app and an automated GitHub Actions workflow.
 
+[Open the live Streamlit app](https://appapppy-mh87owifffvywmgi8dxfo8.streamlit.app/) · [Successful training workflow](https://github.com/harshitrathi14/capstone-predictivemaintenance/actions/runs/42762171518)
+
 ## Final submission
 
 The two submission files are generated in `submission/final/`:
 
-- `Harshit_Rathi_PredictiveMaintenance_FinalReport.pdf`
-- `Harshit_Rathi_PredictiveMaintenance_Notebook.html`
+- [Harshit_Rathi_PredictiveMaintenance_FinalReport.pdf](submission/final/Harshit_Rathi_PredictiveMaintenance_FinalReport.pdf)
+- [Harshit_Rathi_PredictiveMaintenance_Notebook.html](submission/final/Harshit_Rathi_PredictiveMaintenance_Notebook.html)
+
+The PDF has 20 numbered pages, including appendices. The final notebook was executed end-to-end with output in all ten code cells and no error outputs. Validation details are in `evidence/submission_validation.json`.
 
 The executed source notebook is `notebooks/Harshit_Rathi_PredictiveMaintenance_Final.ipynb`. The original interim submission remains in `submission/`.
 
@@ -73,3 +77,5 @@ python src/final_deliverables.py
 The generator requires `evidence/final_evidence.json` and actual repository, workflow and deployed-app screenshots. It executes the full final notebook, verifies the committed model's recorded metrics and split hashes, exports the HTML, renders the PDF, and copies the two files into `submission/final/`. The report uses the committed hosted model; the notebook distinguishes its results from a fresh local reproduction. Both are fully logged.
 
 To adjust report layout without refitting, use `python src/final_deliverables.py --report-only` after an executed final notebook exists. Model checks prevent accidentally pairing a report with a different model. Generation timestamps and file checksums are saved locally in `reports/final/submission_manifest.json`; this is not a portal submission receipt.
+
+To recapture browser evidence locally, install Playwright and Google Chrome, then run `python src/capture_evidence.py <public-app-url>`. This is a report-preparation helper and is not required by the deployed app. The PDF uses cropped GitHub views for readability; the HTML retains the full screenshots.
