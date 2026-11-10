@@ -57,7 +57,7 @@
       "test": "25c2dc140bd54e619db312d40906ca20cfa711027814e435bdfc74a95cd5472f"
     }
   },
-  "python": "3.12.15",
+  "python": "3.12.16",
   "packages": {
     "pandas": "2.3.3",
     "numpy": "2.5.4",
