@@ -6,6 +6,9 @@ on:
     paths:
       - 'data/**'
       - 'src/pipeline.py'
+      - 'src/inference.py'
+      - 'streamlit_app.py'
+      - '.streamlit/**'
       - 'tests/**'
       - 'config.json'
       - 'requirements.txt'
@@ -28,7 +31,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Verify pipeline behavior
-        run: python -m unittest discover -s tests -v
+        run: python -m unittest discover -s tests -p 'test_pipeline.py' -v
       - name: Validate data and save train/test splits
         run: python src/pipeline.py prepare
       - uses: actions/upload-artifact@v4
@@ -64,6 +67,10 @@ jobs:
           info['run_url'] = f"https://github.com/{info['GITHUB_REPOSITORY']}/actions/runs/{info['GITHUB_RUN_ID']}"
           Path('artifacts/model/workflow_run.json').write_text(json.dumps(info, indent=2))
           PY
+      - name: Verify app against the newly trained model
+        run: |
+          cp artifacts/model/* models/
+          python -m unittest discover -s tests -p 'test_app.py' -v
       - uses: actions/upload-artifact@v4
         with:
           name: model-and-experiments

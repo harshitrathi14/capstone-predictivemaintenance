@@ -138,6 +138,13 @@ def train_model(cfg, splits, out):
         'selection_metric': 'average_precision', 'folds': 3, 'seed': 42,
         'candidate_count': len(search.cv_results_['params'])})
     joblib.dump(search.best_estimator_, out / 'best_model.joblib')
+    save_json(out / 'input_profile.json', {
+        'features': list(X.columns),
+        'summary': {name: {'minimum': float(X[name].min()),
+                           'maximum': float(X[name].max()),
+                           'median': float(X[name].median())}
+                    for name in numeric},
+        'model_sha256': hashlib.sha256((out / 'best_model.joblib').read_bytes()).hexdigest()})
     print(json.dumps(metrics, indent=2))
     return metrics
 

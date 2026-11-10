@@ -1,8 +1,10 @@
-pandas>=2.2,<3
-scikit-learn>=1.5,<2
+pandas==2.3.3
+numpy==2.5.4
+scikit-learn==1.9.1
 matplotlib>=3.9,<4
 seaborn>=0.13,<1
-joblib>=1.4,<2
+joblib==1.6.0
+streamlit==1.67.0
 nbformat>=5.10,<6
 nbconvert>=7.16,<8
 ipykernel>=6.29,<8

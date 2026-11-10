@@ -1,4 +1,14 @@
-# Predictive Maintenance — Interim Project
+# Predictive Maintenance — Final Project
+
+## Streamlit deployment
+
+The app classifies an engine observation using the model committed in `models/`. It collects six sensor readings into a dataframe, preserves the training feature order, and returns the dataset class and class-1 score. Label meanings are unverified; the app does not claim to diagnose faults or predict failure time.
+
+For Streamlit Community Cloud, choose repository `harshitrathi14/capstone-predictivemaintenance`, branch `main`, entry point `streamlit_app.py`, and Python `3.12` in Advanced settings. Dependencies are in `requirements.txt`; no secrets are required. After initial deployment, Community Cloud follows updates on the selected branch.
+
+Run locally with `.venv/bin/python -m streamlit run streamlit_app.py`. Run checks with `.venv/bin/python -m unittest discover -s tests -v`. The workflow verifies the new model with the app before committing it. Core model dependencies are pinned to the training versions.
+
+## Existing analysis and interim evidence
 
 Analysis of the supplied `engine_data.csv`: 19,535 observations, six numeric sensor features, and the binary `Engine Condition` target. The original upload remains in the root; the analysis copy is in `data/`. `config.json` contains the schema, source note and report name (Harshit Rathi).
 

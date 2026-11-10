@@ -1,0 +1,43 @@
+{
+  "features": [
+    "Engine rpm",
+    "Lub oil pressure",
+    "Fuel pressure",
+    "Coolant pressure",
+    "lub oil temp",
+    "Coolant temp"
+  ],
+  "summary": {
+    "Engine rpm": {
+      "minimum": 61.0,
+      "maximum": 2239.0,
+      "median": 748.0
+    },
+    "Lub oil pressure": {
+      "minimum": 0.003384113,
+      "maximum": 7.265565536,
+      "median": 3.1645877895
+    },
+    "Fuel pressure": {
+      "minimum": 0.003187131,
+      "maximum": 21.13832551,
+      "median": 6.194226337
+    },
+    "Coolant pressure": {
+      "minimum": 0.002482733,
+      "maximum": 7.478504946,
+      "median": 2.1731640810000004
+    },
+    "lub oil temp": {
+      "minimum": 71.32197369,
+      "maximum": 89.58079551,
+      "median": 76.81670831
+    },
+    "Coolant temp": {
+      "minimum": 62.44595534,
+      "maximum": 195.5279116,
+      "median": 78.340971045
+    }
+  },
+  "model_sha256": "00927ad943f5eec6ab496ab0c83614c1425c579dff1853f7430732dbdd076068"
+}
