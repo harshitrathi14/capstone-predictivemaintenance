@@ -1,25 +1,38 @@
 # Predictive Maintenance — Final Project
 
-## Streamlit deployment
+Harshit Rathi · AIML Capstone Project 3
 
-The app classifies an engine observation using the model committed in `models/`. It collects six sensor readings into a dataframe, preserves the training feature order, and returns the dataset class and class-1 score. Label meanings are unverified; the app does not claim to diagnose faults or predict failure time.
+Engine-condition classification using six sensor readings, a tuned random forest, a Streamlit Community Cloud app and an automated GitHub Actions workflow.
 
-For Streamlit Community Cloud, choose repository `harshitrathi14/capstone-predictivemaintenance`, branch `main`, entry point `streamlit_app.py`, and Python `3.12` in Advanced settings. Dependencies are in `requirements.txt`; no secrets are required. After initial deployment, Community Cloud follows updates on the selected branch.
+## Final submission
 
-Run locally with `.venv/bin/python -m streamlit run streamlit_app.py`. Run checks with `.venv/bin/python -m unittest discover -s tests -v`. The workflow verifies the new model with the app before committing it. Core model dependencies are pinned to the training versions.
+The two submission files are generated in `submission/final/`:
 
-## Existing analysis and interim evidence
+- `Harshit_Rathi_PredictiveMaintenance_FinalReport.pdf`
+- `Harshit_Rathi_PredictiveMaintenance_Notebook.html`
 
-Analysis of the supplied `engine_data.csv`: 19,535 observations, six numeric sensor features, and the binary `Engine Condition` target. The original upload remains in the root; the analysis copy is in `data/`. `config.json` contains the schema, source note and report name (Harshit Rathi).
+The executed source notebook is `notebooks/Harshit_Rathi_PredictiveMaintenance_Final.ipynb`. The original interim submission remains in `submission/`.
 
-**Interpretation:** The uploaded CSV is a byte-for-byte match to Parv Modi’s Kaggle dataset (version 1). Its source metadata does not define the class meanings, and external research gives conflicting mappings. Class 0/class 1 terminology is retained throughout; class 1 is positive only for statistical evaluation. Source links and the conflicting evidence are documented in the PDF and HTML. Without timestamps or engine identifiers, this analysis evaluates condition classification, not advance failure prediction.
+## Interpretation and source
 
-## Submission files
+The supplied dataset has 19,535 observations, six numeric sensors and the binary `Engine Condition` target. The source CSV is in `data/engine_data.csv`. The original upload was verified against [Parv Modi’s Kaggle dataset](https://www.kaggle.com/datasets/parvmodi/automotive-vehicles-engine-health-dataset). Source notes and conflicting external label definitions are recorded in `config.json`.
 
-- `submission/Harshit_Rathi_PredictiveMaintenance_InterimReport.pdf`
-- `submission/Harshit_Rathi_PredictiveMaintenance_Notebook.html`
+The healthy/faulty label mapping and pressure/temperature units remain unverified. The app retains the original class 0/class 1 labels. Without timestamps, engine identifiers and future outcomes, this is condition classification, not demonstrated advance failure prediction. No maintenance savings are claimed.
 
-The executed source notebook is `notebooks/Harshit_Rathi_PredictiveMaintenance.ipynb`. Its analytical code is embedded so the HTML contains the complete implementation and outputs. Dataset provenance has been verified. The healthy/faulty mapping still requires confirmation from the course data dictionary or dataset creator.
+## Streamlit Community Cloud
+
+Deploy with these settings:
+
+| Setting | Value |
+|---|---|
+| Repository | `harshitrathi14/capstone-predictivemaintenance` |
+| Branch | `main` |
+| Main file path | `streamlit_app.py` |
+| Python version (Advanced settings) | `3.12` |
+| Dependencies | `requirements.txt` |
+| Secrets | None required |
+
+The app loads `models/best_model.joblib`, collects six readings in a dataframe, validates inputs and displays the predicted dataset class and class-1 score. The score is not a calibrated failure probability. Input defaults and observed ranges come only from the training split. The saved model checksum and inference package versions are checked before loading.
 
 ## Reproduce
 
@@ -27,44 +40,36 @@ The executed source notebook is `notebooks/Harshit_Rathi_PredictiveMaintenance.i
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python src/deliverables.py
+python -m streamlit run streamlit_app.py
 ```
 
-This runs the complete notebook, including validation, training-only EDA, splitting, 16-candidate cross-validation, held-out evaluation and plotting, then exports HTML and renders a separate PDF. Run from the project root. The report name and label documentation are configured in `config.json`.
-
-The existing configured `.venv` can be used directly:
-
-```sh
-.venv/bin/python src/deliverables.py
-.venv/bin/python -m unittest discover -s tests -v
-```
-
-Individual workflow stages:
+Individual training stages:
 
 ```sh
 python src/pipeline.py validate
 python src/pipeline.py prepare
 python src/pipeline.py train
+python -m unittest discover -s tests -v
 ```
 
-To refresh the report layout and notebook explanations without refitting models, use `python src/deliverables.py --report-only`. This preserves executed code and outputs and exports the revised HTML alongside the PDF into `reports/`; copy both files into `submission/` after review. This requires the executed notebook and existing local analysis artifacts with matching configuration. The engine-specific EDA/report generator expects the supplied six-sensor schema; `pipeline.py` itself supports configurable binary-classification schemas.
+The model test fixtures are synthetic and used only for software verification. Report results use the supplied engine dataset.
 
-## Evidence and rubric coverage
+## Automation
 
-| Requirement | Implementation / output |
-|---|---|
-| Registration | Exact schema and numeric/target checks; source SHA-256, missing and duplicate summaries |
-| EDA | Training summaries, univariate distributions, class comparisons, multivariate correlations and data-specific business interpretations |
-| Preparation | No missing values/duplicates observed; all six sensors retained; stratified 80/20 CSV splits; preprocessing fitted inside CV |
-| Artifact handoff | Separate GitHub Actions preparation/training jobs using upload/download-artifact; split checksum validation |
-| Experiment tracking | 16 parameter combinations × 3 folds; all parameters, scores, ranks and timing in `artifacts/model/experiments.csv` |
-| Best model | Preprocessing and fitted random forest in `artifacts/model/best_model.joblib` |
-| Evaluation | Held-out metrics, prior baseline, confusion matrix and ROC/precision-recall plots; no test-set tuning |
-| Submission | Numbered PDF pages, figures/tables, methods, findings, recommendations and raw-code appendix; executed HTML notebook |
-| Reproducibility | `artifacts/model/run_metadata.json` records environment, configuration, seed and source/split hashes |
+`.github/workflows/pipeline.yml` runs on relevant pushes to `main` and manual dispatch:
 
-The repository is [harshitrathi14/capstone-predictivemaintenance](https://github.com/harshitrathi14/capstone-predictivemaintenance). The GitHub Actions workflow has three jobs: `prepare` validates the data and uploads saved splits; `train` downloads the splits, tunes the forest and uploads the model and logs; `persist-model` commits those results to `models/`. Relevant pushes to `main` trigger training; manual runs are also enabled. Model-only commits do not trigger another run.
+1. **prepare:** validate data, test the pipeline, save stratified train/test CSVs and upload the split artifact.
+2. **train:** download and verify the split artifact, tune 16 candidates with three-fold cross-validation, evaluate the holdout, save the model and logs, and test the app against the new model.
+3. **persist-model:** download the model artifact and automatically commit changed model files and records to `main`.
 
-Hosted execution is recorded in `workflow_evidence.json`, including the run link and model commit. The PDF and HTML retain the original local results for consistency with their executed outputs. Hosted results and package versions are recorded separately in `models/metrics.json` and `models/run_metadata.json`; different package versions can produce small score differences. The hosted run does not regenerate the submission files.
+Model-only commits do not retrigger training. Core model dependencies are pinned. After initial deployment, Community Cloud follows the selected branch. The workflow run that produced the model is recorded in `models/workflow_run.json`.
 
-Tests use temporary synthetic fixtures only for software verification, covering schema/label rejection, artifact tampering, disjoint splits, model serialization and unseen categories. Submission results use the supplied engine dataset.
+## Report generation and evidence
+
+```sh
+python src/final_deliverables.py
+```
+
+The generator requires `evidence/final_evidence.json` and actual repository, workflow and deployed-app screenshots. It executes the full final notebook, verifies the committed model's recorded metrics and split hashes, exports the HTML, renders the PDF, and copies the two files into `submission/final/`. The report uses the committed hosted model; the notebook distinguishes its results from a fresh local reproduction. Both are fully logged.
+
+To adjust report layout without refitting, use `python src/final_deliverables.py --report-only` after an executed final notebook exists. Model checks prevent accidentally pairing a report with a different model. Generation timestamps and file checksums are saved locally in `reports/final/submission_manifest.json`; this is not a portal submission receipt.
